@@ -1,0 +1,21 @@
+SMART BUS RESERVATION SYSTEM - TEST CASES
+(Run each in a fresh session unless noted. Actual results recorded from a test run.)
+
+ID     | Scenario              | Input / Action                          | Expected Result                                         | Actual Result                                            | Match
+-------|-----------------------|-----------------------------------------|---------------------------------------------------------|----------------------------------------------------------|------
+TC-01  | View all routes       | Menu 1, press Enter                     | All five routes and seat status appear                  | Five routes listed with seats 40/40, 36/36, etc.         | Yes
+TC-02  | Search Hyderabad      | Menu 2, "hyderabad"                     | R101, R103, R105 appear                                 | R101, R103, R105 shown                                   | Yes
+TC-03  | Unknown city          | Menu 2, "Atlantis"                      | No-match message; program continues                     | "No routes found matching 'Atlantis'." then menu returned| Yes
+TC-04  | Book two seats        | Ahmed, 24, R101, 2                      | Confirmed, Rs. 2400, R101 availability drops by 2       | B1001 confirmed, Rs. 2400, R101 at 38 seats              | Yes
+TC-05  | Zero seats            | Any valid details, seats = 0            | Rejected; no booking, no seat change                    | "seats must be a positive whole number"; no change       | Yes
+TC-06  | Too many seats        | R101 (38 left), request 39              | Rejected; availability never negative                   | "only 38 seat(s) available"; no change                   | Yes
+TC-07  | Cancel confirmed      | Menu 5, B1001                           | Status Cancelled; 2 seats restored                      | Cancelled; "Seats restored: 2"; R101 back to 40          | Yes
+TC-08  | Cancel same again     | Menu 5, B1001 again                     | Rejected; no extra restoration                          | "already cancelled. No seats restored."; R101 still 40   | Yes
+TC-09  | Report, no bookings   | Menu 7 on fresh start                   | Zero totals and revenue; route status counted           | All zeros, fully booked routes: 0                        | Yes
+TC-10  | Book all seats        | Zed, 30, R105, 30 seats                 | Success; availability 0; Fully Booked                   | Confirmed Rs. 45000; R105 shows "Fully Booked"           | Yes
+TC-11  | Report after cancel   | Book, cancel, then Menu 7               | Cancelled count up; cancelled fare excluded             | Cancelled: 1, Confirmed: 0, Revenue: Rs. 0               | Yes
+TC-12  | Invalid menu option   | "abc", "0", "99"                        | Helpful error; returns to menu                          | "Invalid input" / "Unsupported choice"; menu shown again | Yes
+
+Extra checks: blank name rejected; non-numeric age rejected; unknown route "R999" rejected;
+cancelling unknown ID "B9999" reports not found and changes nothing; empty booking list shows
+"No bookings found."
