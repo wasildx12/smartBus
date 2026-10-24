@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Bus: Ticket Booking</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#e9eef2;--card:#fff;--ink:#12263a;--mut:#5b6b7a;--line:#cfd8df;--acc:#f2b705;--accink:#12263a;--ok:#1b7f5c;--bad:#b3261e;--bar:#12263a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0e1a26;--card:#16283a;--ink:#e8eef3;--mut:#93a4b3;--line:#2b4157;--acc:#f2b705;--accink:#12263a;--ok:#4cc9a0;--bad:#ff8a80;--bar:#f2b705}}
+:root[data-theme="dark"]{--bg:#0e1a26;--card:#16283a;--ink:#e8eef3;--mut:#93a4b3;--line:#2b4157;--acc:#f2b705;--accink:#12263a;--ok:#4cc9a0;--bad:#ff8a80;--bar:#f2b705}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:#12263a;color:#fff;padding:18px 16px 0}
+.wrap{max-width:860px;margin:0 auto}
+h1{font:700 2rem/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.02em;margin:0 0 4px}
+header p{margin:0 0 14px;color:#b9c7d3;font-size:.95rem}
+nav{display:flex;gap:2px;overflow-x:auto}
+nav button{font:600 1rem "Barlow Condensed","Arial Narrow",system-ui,sans-serif;padding:10px 16px;border:0;background:transparent;color:#b9c7d3;cursor:pointer;border-bottom:4px solid transparent;white-space:nowrap}
+nav button[aria-selected="true"]{color:#fff;border-bottom-color:var(--acc)}
+main{padding:16px}
+.view{display:none}.view.on{display:block}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+input,select,button{font:inherit}
+input,select{padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);min-width:0}
+.tools input{flex:1 1 200px}
+.btn{padding:10px 16px;border:0;border-radius:6px;background:var(--acc);color:var(--accink);font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:600}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid var(--bad);padding:6px 12px;font-weight:600}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.route{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
+.id{font:700 1.1rem "Barlow Condensed",system-ui,sans-serif;color:var(--mut)}
+.jr{font-weight:700;font-size:1.1rem}
+.fare{text-align:right;font-weight:700}
+.meta{color:var(--mut);font-size:.9rem}
+.bar{grid-column:1/-1;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--bar)}
+.tag{display:inline-block;font-size:.8rem;font-weight:700;padding:1px 8px;border-radius:10px;border:1px solid currentColor}
+.tag.Available,.tag.Confirmed{color:var(--ok)}.tag.Partially{color:var(--mut)}.tag.Full,.tag.Cancelled{color:var(--bad)}
+form{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:12px;max-width:520px}
+label{display:grid;gap:4px;font-weight:600;font-size:.95rem}
+.err{color:var(--bad);font-weight:600;min-height:1.4em}
+.preview{font-weight:700}
+.ticket{background:var(--card);border:1px solid var(--line);border-left:10px solid var(--acc);border-radius:8px;padding:12px 14px;margin-bottom:12px;position:relative;display:grid;grid-template-columns:1fr auto;gap:4px 12px}
+.ticket.Cancelled{opacity:.7;border-left-color:var(--line)}
+.ticket.Cancelled .jr{text-decoration:line-through}
+.stub{grid-column:1/-1;border-top:2px dashed var(--line);padding-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.sched h3{margin:14px 0 4px;font:700 1.25rem "Barlow Condensed",system-ui,sans-serif}
+.sched div{padding:4px 0;border-bottom:1px solid var(--line)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px}
+.stat b{display:block;font:700 1.9rem "Barlow Condensed",system-ui,sans-serif}
+.stat span{color:var(--mut);font-size:.9rem}
+.empty{color:var(--mut);padding:20px 0}
+#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#12263a;color:#fff;padding:10px 16px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;z-index:20}
+#toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style></head><body>
+<header><div class="wrap">
+<h1>Smart Bus</h1><p>Browse routes, book seats, and manage your tickets.</p>
+<nav role="tablist" id="nav"></nav></div></header>
+<main><div class="wrap">
+<section class="view on" id="v-routes">
+ <div class="tools">
+  <input id="q" type="search" placeholder="Search by route ID or city" aria-label="Search routes">
+  <select id="flt" aria-label="Filter"><option value="all">All routes</option><option value="open">Seats available</option><option value="sched">Schedule by city</option></select>
+ </div><div id="routes"></div></section>
+<section class="view" id="v-book">
+ <form id="bf" novalidate>
+  <label>Passenger name<input id="nm" autocomplete="off"></label>
+  <label>Passenger age<input id="ag" inputmode="numeric"></label>
+  <label>Route<select id="rt"></select></label>
+  <label>Number of seats<input id="st" inputmode="numeric" value="1"></label>
+  <div class="preview" id="pv"></div>
+  <div class="err" id="er" role="alert"></div>
+  <button class="btn" type="submit">Book ticket</button>
+ </form><div id="conf" style="margin-top:16px;max-width:520px"></div></section>
+<section class="view" id="v-bookings"><div id="bks"></div></section>
+<section class="view" id="v-report"><div class="stats" id="rep"></div><div id="byr" style="margin-top:16px"></div></section>
+</div></main>
+<div id="toast" role="status"></div>
+<script>
+var CITIES=["Karachi","Hyderabad","Sukkur","Mirpur Khas","Lahore"];
+var routes=[
+["R101","Karachi","Hyderabad","08:00 AM",1200,40],["R102","Karachi","Sukkur","09:30 AM",2000,36],
+["R103","Hyderabad","Mirpur Khas","11:00 AM",800,32],["R104","Karachi","Lahore","07:00 PM",5000,45],
+["R105","Sukkur","Hyderabad","02:00 PM",1500,30]].map(function(r){return{route_id:r[0],departure_city:r[1],destination_city:r[2],departure_time:r[3],ticket_price:r[4],total_seats:r[5],available_seats:r[5]}});
+var bookings=[],issued=new Set(),nextNo=1001;
+var $=function(i){return document.getElementById(i)};
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function money(n){return "Rs. "+n.toLocaleString("en-US")}
+function route(id){return routes.find(function(r){return r.route_id===id})}
+function status(r){return r.available_seats===0?["Full","Fully Booked"]:r.available_seats===r.total_seats?["Available","Available"]:["Partially","Partially Booked"]}
+function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove("show")},2600)}
+
+var TABS=[["routes","Routes"],["book","Book a ticket"],["bookings","My bookings"],["report","Report"]];
+$("nav").innerHTML=TABS.map(function(t,i){return '<button role="tab" data-v="'+t[0]+'" aria-selected="'+(i===0)+'">'+t[1]+'</button>'}).join("");
+function show(v){
+ document.querySelectorAll("#nav button").forEach(function(b){b.setAttribute("aria-selected",b.dataset.v===v)});
+ document.querySelectorAll(".view").forEach(function(s){s.classList.toggle("on",s.id==="v-"+v)});
+ render()}
+$("nav").onclick=function(e){if(e.target.dataset.v)show(e.target.dataset.v)};
+
+function renderRoutes(){
+ var q=$("q").value.trim().toLowerCase(),f=$("flt").value,box=$("routes");
+ if(f==="sched"){
+  box.className="sched";
+  box.innerHTML=CITIES.map(function(c){
+   var rows=routes.filter(function(r){return r.departure_city===c}).map(function(r){return "<div>"+r.route_id+" → "+r.destination_city+" | "+r.departure_time+"</div>"}).join("");
+   return "<h3>"+c+"</h3>"+(rows||'<div class="meta">No scheduled departures.</div>')}).join("");
+  return}
+ box.className="";
+ var list=routes.filter(function(r){
+  if(f==="open"&&r.available_seats===0)return false;
+  if(!q)return true;
+  return r.route_id.toLowerCase()===q||r.departure_city.toLowerCase().indexOf(q)>-1||r.destination_city.toLowerCase().indexOf(q)>-1});
+ box.innerHTML=list.length?list.map(function(r){
+  var s=status(r),pct=Math.round(r.available_seats/r.total_seats*100);
+  return '<div class="route"><div><span class="id">'+r.route_id+'</span><div class="jr">'+r.departure_city+" → "+r.destination_city+'</div></div>'+
+  '<div class="fare">'+money(r.ticket_price)+'<div class="meta">per seat</div></div>'+
+  '<div class="meta">Departs '+r.departure_time+" · "+r.available_seats+" of "+r.total_seats+' seats left <span class="tag '+s[0]+'">'+s[1]+'</span></div>'+
+  '<div><button class="btn ghost" data-book="'+r.route_id+'"'+(r.available_seats?"":" disabled")+'>Book</button></div>'+
+  '<div class="bar"><i style="width:'+pct+'%"></i></div></div>'}).join(""):'<p class="empty">No routes match “'+esc($("q").value.trim())+'”. Try a city name or a route ID such as R101.</p>'}
+
+function fillSelect(keep){
+ $("rt").innerHTML=routes.map(function(r){return '<option value="'+r.route_id+'"'+(r.available_seats?"":" disabled")+'>'+r.route_id+": "+r.departure_city+" → "+r.destination_city+" ("+r.available_seats+" left)</option>"}).join("");
+ if(keep)$("rt").value=keep;preview()}
+function preview(){
+ var r=route($("rt").value),n=parseInt($("st").value,10);
+ $("pv").textContent=r&&n>0?"Total fare: "+money(r.ticket_price*n):""}
+
+function renderBookings(){
+ $("bks").innerHTML=bookings.length?bookings.map(function(b,i){
+  var r=route(b.route_id);
+  return '<div class="ticket '+b.status+'"><div><span class="id">'+b.booking_id+'</span><div class="jr">'+r.departure_city+" → "+r.destination_city+'</div>'+
+  '<div class="meta">'+esc(b.passenger_name)+", age "+b.passenger_age+" · "+b.seats+" seat(s) · "+r.departure_time+'</div></div>'+
+  '<div class="fare">'+money(b.total_fare)+'</div>'+
+  '<div class="stub"><span class="tag '+b.status+'">'+b.status+'</span>'+
+  (b.status==="Confirmed"?'<button class="btn danger" data-cancel="'+b.booking_id+'">Cancel booking</button>':"")+'</div></div>'}).reverse().join(""):'<p class="empty">No bookings found. Book your first seat from the Book a ticket tab.</p>'}
+
+function renderReport(){
+ var conf=bookings.filter(function(b){return b.status==="Confirmed"}),seats=0,rev=0;
+ conf.forEach(function(b){seats+=b.seats;rev+=b.total_fare});
+ var full=routes.filter(function(r){return r.available_seats===0}).length;
+ var S=[[bookings.length,"Total bookings created"],[conf.length,"Confirmed bookings"],[bookings.length-conf.length,"Cancelled bookings"],[seats,"Seats currently reserved"],[money(rev),"Confirmed revenue"],[full,"Fully booked routes"]];
+ $("rep").innerHTML=S.map(function(s){return '<div class="stat"><b>'+s[0]+"</b><span>"+s[1]+"</span></div>"}).join("");
+ var rows=routes.map(function(r){var s=0,v=0;conf.forEach(function(b){if(b.route_id===r.route_id){s+=b.seats;v+=b.total_fare}});return s?"<div>"+r.route_id+": "+s+" seat(s), "+money(v)+"</div>":""}).join("");
+ $("byr").innerHTML=rows?"<h3>Confirmed bookings by route</h3>"+rows:""}
+
+function render(){renderRoutes();fillSelect($("rt").value);renderBookings();renderReport()}
+
+function bookTicket(e){
+ e.preventDefault();
+ var name=$("nm").value.trim(),ageT=$("ag").value.trim(),seatT=$("st").value.trim(),r=route($("rt").value),err=$("er");
+ var age=/^\d+$/.test(ageT)?parseInt(ageT,10):0,seats=/^\d+$/.test(seatT)?parseInt(seatT,10):0;
+ $("conf").innerHTML="";
+ if(!name){err.textContent="Enter the passenger’s name.";return}
+ if(age<=0){err.textContent="Age must be a whole number greater than zero.";return}
+ if(!r){err.textContent="Choose a route that exists.";return}
+ if(seats<=0){err.textContent="Seats must be a whole number greater than zero.";return}
+ if(seats>r.available_seats){err.textContent="Only "+r.available_seats+" seat(s) left on "+r.route_id+". Lower the number of seats.";return}
+ err.textContent="";
+ var id="B"+nextNo;while(issued.has(id)){nextNo++;id="B"+nextNo}
+ issued.add(id);nextNo++;
+ var b={booking_id:id,passenger_name:name,passenger_age:age,route_id:r.route_id,seats:seats,total_fare:r.ticket_price*seats,status:"Confirmed"};
+ bookings.push(b);r.available_seats-=seats;
+ $("conf").innerHTML='<div class="ticket Confirmed"><div><span class="id">Booking confirmed · '+id+'</span><div class="jr">'+r.departure_city+" → "+r.destination_city+'</div><div class="meta">'+esc(name)+" · "+seats+" seat(s) · departs "+r.departure_time+'</div></div><div class="fare">'+money(b.total_fare)+'</div><div class="stub"><span class="tag Confirmed">Confirmed</span><span class="meta">Fare per seat: '+money(r.ticket_price)+"</span></div></div>";
+ $("bf").reset();$("st").value="1";fillSelect(r.route_id);renderBookings();renderReport();renderRoutes();toast("Booking "+id+" confirmed.")}
+
+function cancel(id){
+ var b=bookings.find(function(x){return x.booking_id===id});
+ if(!b||b.status!=="Confirmed"){toast("That booking can’t be cancelled.");return}
+ var r=route(b.route_id);b.status="Cancelled";r.available_seats+=b.seats;
+ toast("Booking "+id+" cancelled. "+b.seats+" seat(s) restored to "+r.route_id+".");render()}
+
+$("q").oninput=renderRoutes;$("flt").onchange=renderRoutes;
+$("bf").onsubmit=bookTicket;$("rt").onchange=preview;$("st").oninput=preview;
+document.body.addEventListener("click",function(e){
+ var t=e.target;
+ if(t.dataset.book){show("book");$("rt").value=t.dataset.book;preview()}
+ if(t.dataset.cancel)cancel(t.dataset.cancel)});
+render();
+</script></body></html>
